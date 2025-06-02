@@ -6,10 +6,10 @@ export BACKEND_API_URL=${VITE_BACKEND_URL:-"http://localhost:3001/api"}
 
 echo "Using backend URL: ${BACKEND_API_URL}"
 
-# Replace environment variables in nginx config
-envsubst '${BACKEND_URL}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
+# Copy nginx config template and replace the backend URL
+cp /etc/nginx/templates/default.conf.template /etc/nginx/conf.d/default.conf
 
-# Replace BACKEND_URL in the template with the API URL
+# Replace BACKEND_URL placeholder with actual URL
 sed -i "s|\$BACKEND_URL|${BACKEND_API_URL}|g" /etc/nginx/conf.d/default.conf
 
 # Start nginx
