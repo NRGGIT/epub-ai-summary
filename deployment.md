@@ -66,7 +66,7 @@ docker run -d \
 #### Build Frontend Image
 ```bash
 cd frontend
-docker build -t epub-reader-frontend:latest .
+docker build --build-arg VITE_BACKEND_URL="https://your-backend-domain.com/api" -t epub-reader-frontend:latest .
 ```
 
 #### Deploy Frontend Container
@@ -75,7 +75,6 @@ docker run -d \
   --name epub-reader-frontend \
   --restart unless-stopped \
   -p 80:80 \
-  -e VITE_BACKEND_URL="https://your-backend-domain.com/api" \
   epub-reader-frontend:latest
 ```
 

@@ -16,6 +16,8 @@ echo "✅ Backend image built successfully"
 # Build frontend image
 echo "📦 Building frontend image..."
 cd ../frontend
+echo "⚠️  Note: Building with default backend URL. For production, use:"
+echo "   docker build --build-arg VITE_BACKEND_URL=https://your-backend.com/api -t epub-reader-frontend:latest ."
 docker build -t epub-reader-frontend:latest .
 echo "✅ Frontend image built successfully"
 
