@@ -11,7 +11,8 @@ import type {
 
 // Get backend URL from environment variable or default to relative path
 const getBackendUrl = () => {
-  // In production, BACKEND_URL should be set as environment variable
+  // In production, VITE_BACKEND_URL should be set as environment variable
+  // Format: https://your-backend-domain.com/api (include /api path)
   // In development, it defaults to relative path for proxy
   return import.meta.env.VITE_BACKEND_URL || '/api';
 };

@@ -43,7 +43,7 @@ docker run -d \
   --name epub-reader-frontend \
   --restart unless-stopped \
   -p 80:80 \
-  -e BACKEND_URL="http://localhost:3001" \
+  -e VITE_BACKEND_URL="http://localhost:3001/api" \
   epub-reader-frontend:latest
 
 echo "✅ Frontend deployed"
@@ -60,5 +60,6 @@ echo "⚠️  IMPORTANT:"
 echo "1. Replace OPENAI_API_KEY with your actual API key"
 echo "2. For production, use proper domain names instead of localhost"
 echo "3. Configure HTTPS termination at load balancer level"
+echo "4. VITE_BACKEND_URL must include /api path (e.g., https://your-domain.com/api)"
 echo ""
 echo "📖 See deployment.md for production deployment instructions"

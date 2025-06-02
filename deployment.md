@@ -75,7 +75,7 @@ docker run -d \
   --name epub-reader-frontend \
   --restart unless-stopped \
   -p 80:80 \
-  -e BACKEND_URL="https://your-backend-domain.com" \
+  -e VITE_BACKEND_URL="https://your-backend-domain.com/api" \
   epub-reader-frontend:latest
 ```
 
@@ -114,7 +114,10 @@ docker volume create epub-config
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `BACKEND_URL` | Yes | `http://localhost:3001` | Backend service URL (without /api suffix) |
+| `VITE_BACKEND_URL` | Yes | `/api` | Backend service URL (MUST include /api suffix) |
+
+**Important**: The `VITE_BACKEND_URL` must include the `/api` path. 
+Example: `https://4256a33f4130474d891d1270c5d7a0c1.constructor.pro/api`
 
 ## 🔌 Port Configuration
 
