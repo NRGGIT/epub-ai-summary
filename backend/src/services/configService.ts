@@ -9,11 +9,11 @@ export class ConfigService {
   constructor() {
     this.configPath = path.join(__dirname, '../../data/config.json');
     this.defaultConfig = {
-      apiEndpoint: 'https://17aa5245425e480e805ff5c79c44fa18.constructor.pro/a023f5c813e74089ab9c5b3fc3c63f80',
-      apiKey: 'qBqkWcSdYGFohFDwNDmL7plk7chQwcwPSWFzi5V6AKFEkRniD9SbSqw2YqV3qyjA',
-      modelName: 'gpt-4.1',
-      prompt: 'You are a helpful assistant that creates concise, accurate summaries of text content. Maintain the key information and main ideas while reducing the length according to the specified ratio. Keep the summary coherent and well-structured.',
-      defaultRatio: 0.3
+      apiEndpoint: process.env.OPENAI_API_ENDPOINT || 'https://api.openai.com/v1',
+      apiKey: process.env.OPENAI_API_KEY || '',
+      modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
+      prompt: process.env.OPENAI_PROMPT || 'You are a helpful assistant that creates concise, accurate summaries of text content. Maintain the key information and main ideas while reducing the length according to the specified ratio. Keep the summary coherent and well-structured.',
+      defaultRatio: process.env.DEFAULT_RATIO ? parseFloat(process.env.DEFAULT_RATIO) : 0.3
     };
   }
 
