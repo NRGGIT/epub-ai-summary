@@ -1,21 +1,16 @@
 #!/bin/sh
 
-# Use VITE_BACKEND_URL if provided, otherwise default to localhost
-# VITE_BACKEND_URL should include /api path, but we need base URL for nginx
+# Simple startup - no proxy configuration needed
+# Frontend will connect directly to backend using VITE_BACKEND_URL
+echo "Frontend starting - will connect directly to backend"
 if [ -n "$VITE_BACKEND_URL" ]; then
-    # Remove /api suffix if present to get base URL for nginx
-    export BACKEND_BASE_URL=${VITE_BACKEND_URL%/api}
+    echo "Backend URL configured: $VITE_BACKEND_URL"
 else
-    export BACKEND_BASE_URL="http://localhost:3001"
+    echo "No VITE_BACKEND_URL set - using default /api for development"
 fi
 
-echo "Using backend base URL: ${BACKEND_BASE_URL}"
-
-# Copy nginx config template and replace the backend URL
+# Copy nginx config (no substitution needed)
 cp /etc/nginx/templates/default.conf.template /etc/nginx/conf.d/default.conf
-
-# Replace BACKEND_URL placeholder with base URL
-sed -i "s|\$BACKEND_URL|${BACKEND_BASE_URL}|g" /etc/nginx/conf.d/default.conf
 
 # Start nginx
 nginx -g "daemon off;"
