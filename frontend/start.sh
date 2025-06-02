@@ -1,16 +1,8 @@
 #!/bin/sh
 
-# Set default backend URL if not provided
-export BACKEND_URL=${BACKEND_URL:-"http://localhost:3001"}
-
-# Ensure BACKEND_URL ends with /api
-if [ "${BACKEND_URL}" != "${BACKEND_URL%/api}" ]; then
-    # Already ends with /api, use as is
-    BACKEND_API_URL="${BACKEND_URL}"
-else
-    # Add /api to the end
-    BACKEND_API_URL="${BACKEND_URL}/api"
-fi
+# Use VITE_BACKEND_URL if provided, otherwise default to localhost
+# VITE_BACKEND_URL should already include /api path
+export BACKEND_API_URL=${VITE_BACKEND_URL:-"http://localhost:3001/api"}
 
 echo "Using backend URL: ${BACKEND_API_URL}"
 
