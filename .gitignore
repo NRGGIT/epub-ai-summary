@@ -104,6 +104,7 @@ tmp/
 
 # Configuration files with sensitive data
 backend/data/config.json
+backend/data/config_old.json
 config.json
 
 # Jupyter notebook checkpoints
