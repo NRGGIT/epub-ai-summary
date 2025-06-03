@@ -14,6 +14,7 @@ EOF
 
 echo "Environment variables injected:"
 echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL}"
+echo "BACKEND_URL: ${BACKEND_URL}"
 
-# Execute the original command
-exec "$@"
+# Execute the original command, passing backend URL as an environment variable for Nginx
+exec env ENV_BACKEND_URL=$BACKEND_URL "$@"
