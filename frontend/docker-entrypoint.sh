@@ -12,9 +12,12 @@ window.ENV = {
 };
 EOF
 
+# Extract backend URL from VITE_API_BASE_URL by removing /api suffix
+BACKEND_URL_FOR_NGINX=$(echo "$VITE_API_BASE_URL" | sed 's|/api$||')
+
 echo "Environment variables injected:"
 echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL}"
-echo "BACKEND_URL: ${BACKEND_URL}"
+echo "BACKEND_URL_FOR_NGINX: ${BACKEND_URL_FOR_NGINX}"
 
 # Execute the original command, passing backend URL as an environment variable for Nginx
-exec env ENV_BACKEND_URL=$BACKEND_URL "$@"
+exec env ENV_BACKEND_URL=$BACKEND_URL_FOR_NGINX "$@"
