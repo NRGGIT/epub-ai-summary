@@ -1,4 +1,4 @@
-# Build stage
+# Multi-stage build for Vue.js frontend
 FROM node:18-alpine AS builder
 
 # Set working directory
@@ -7,38 +7,31 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (including dev dependencies for build)
 RUN npm ci
 
 # Copy source code
 COPY . .
 
-# Accept build argument for backend URL
-ARG VITE_BACKEND_URL
-ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
-
 # Build the application
 RUN npm run build
 
-# Production stage
+# Production stage with nginx
 FROM nginx:alpine
 
-# Copy built files to nginx
+# Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration template
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy startup script
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+# Create a script to inject environment variables at runtime
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-# Expose port
+# Expose port 80
 EXPOSE 80
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
-
-# Start with custom script
-CMD ["/start.sh"]
+# Use custom entrypoint to inject environment variables
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]

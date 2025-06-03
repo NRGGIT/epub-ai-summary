@@ -11,10 +11,9 @@ import type {
 
 // Get backend URL from environment variable or default to relative path
 const getBackendUrl = () => {
-  // In production, VITE_BACKEND_URL should be the full backend URL with /api
-  // Format: https://your-backend-domain.com/api
-  // In development, it defaults to relative path
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || '/api';
+  // In production, VITE_API_BASE_URL is injected via docker-entrypoint.sh
+  // In development, VITE_BACKEND_URL is used from the environment
+  const backendUrl = window.ENV?.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || '/api';
   console.log('Using backend URL:', backendUrl);
   return backendUrl;
 };
