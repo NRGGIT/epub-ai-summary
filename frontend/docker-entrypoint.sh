@@ -19,5 +19,10 @@ echo "Environment variables injected:"
 echo "VITE_API_BASE_URL: ${VITE_API_BASE_URL}"
 echo "BACKEND_URL_FOR_NGINX: ${BACKEND_URL_FOR_NGINX}"
 
-# Execute the original command, passing backend URL as an environment variable for Nginx
-exec env ENV_BACKEND_URL=$BACKEND_URL_FOR_NGINX "$@"
+# Replace placeholder in nginx config with actual backend URL
+sed -i "s|BACKEND_URL_PLACEHOLDER|${BACKEND_URL_FOR_NGINX}|g" /etc/nginx/conf.d/default.conf
+
+echo "Nginx configuration updated with backend URL: ${BACKEND_URL_FOR_NGINX}"
+
+# Execute the original command
+exec "$@"
