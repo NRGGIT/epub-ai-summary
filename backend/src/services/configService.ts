@@ -9,11 +9,11 @@ export class ConfigService {
   constructor() {
     this.configPath = path.join(__dirname, '../../data/config.json');
     this.defaultConfig = {
-      apiEndpoint: process.env.OPENAI_API_ENDPOINT || 'https://api.openai.com/v1',
-      apiKey: process.env.OPENAI_API_KEY || '',
-      modelName: process.env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
-      prompt: process.env.OPENAI_PROMPT || 'You are a helpful assistant that creates concise, accurate summaries of text content. Maintain the key information and main ideas while reducing the length according to the specified ratio. Keep the summary coherent and well-structured.',
-      defaultRatio: process.env.DEFAULT_RATIO ? parseFloat(process.env.DEFAULT_RATIO) : 0.3
+      apiEndpoint: 'https://api.openai.com/v1',
+      apiKey: '',
+      modelName: 'gpt-4o-mini',
+      prompt: 'You are a helpful assistant that creates concise, accurate summaries of text content. Maintain the key information and main ideas while reducing the length according to the specified ratio. Keep the summary coherent and well-structured.',
+      defaultRatio: 0.3
     };
   }
 
@@ -21,7 +21,16 @@ export class ConfigService {
     // Start with default config
     let config = { ...this.defaultConfig };
     
-    // Override with environment variables if available
+    // Always try to load from config file first (this allows API updates to persist)
+    try {
+      const fileConfig = await fs.readJSON(this.configPath);
+      config = { ...config, ...fileConfig };
+    } catch (error) {
+      // If config doesn't exist, create it with current config
+      await this.saveConfig(config);
+    }
+    
+    // Override with environment variables if available (env vars have highest priority)
     if (process.env.OPENAI_API_ENDPOINT) {
       config.apiEndpoint = process.env.OPENAI_API_ENDPOINT;
     }
@@ -41,17 +50,6 @@ export class ConfigService {
       }
     }
     
-    // Try to load from config file if no env vars are set
-    if (!process.env.OPENAI_API_KEY && !process.env.OPENAI_API_ENDPOINT) {
-      try {
-        const fileConfig = await fs.readJSON(this.configPath);
-        config = { ...config, ...fileConfig };
-      } catch (error) {
-        // If config doesn't exist, create it with current config
-        await this.saveConfig(config);
-      }
-    }
-    
     return config;
   }
 
@@ -61,9 +59,20 @@ export class ConfigService {
   }
 
   async updateConfig(updates: Partial<SummarizationConfig>): Promise<SummarizationConfig> {
-    const currentConfig = await this.getConfig();
-    const newConfig = { ...currentConfig, ...updates };
-    await this.saveConfig(newConfig);
-    return newConfig;
+    // Get current config from file (without env var overrides)
+    let fileConfig = { ...this.defaultConfig };
+    try {
+      const existingFileConfig = await fs.readJSON(this.configPath);
+      fileConfig = { ...fileConfig, ...existingFileConfig };
+    } catch (error) {
+      // File doesn't exist, will be created
+    }
+    
+    // Apply updates to file config
+    const newFileConfig = { ...fileConfig, ...updates };
+    await this.saveConfig(newFileConfig);
+    
+    // Return the final config (with env var overrides applied)
+    return await this.getConfig();
   }
 }
