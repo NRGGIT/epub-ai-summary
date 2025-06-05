@@ -232,16 +232,15 @@ const selectChapter = async (chapter: Chapter) => {
     selectedChapter.value = chapter;
     currentSummary.value = null;
 
-    // Load chapter content if not already loaded
-    if (!chapter.content || chapter.content.trim() === '') {
-      if (chapter.children && chapter.children.length) {
-        await loadFullChapter(bookId, chapter.id);
-      } else {
-        await loadChapter(bookId, chapter.id);
-      }
-      if (store.currentChapter) {
-        chapter.content = store.currentChapter.content;
-      }
+    // Always fetch combined content for chapters with children
+    if (chapter.children && chapter.children.length) {
+      await loadFullChapter(bookId, chapter.id);
+    } else if (!chapter.content || chapter.content.trim() === '') {
+      await loadChapter(bookId, chapter.id);
+    }
+
+    if (store.currentChapter) {
+      chapter.content = store.currentChapter.content;
     }
   } catch (error) {
     console.error('Failed to load chapter:', error);
