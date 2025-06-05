@@ -47,6 +47,9 @@ export class EpubService {
           const stack: Array<{ level: number; chapter: Chapter }> = [];
 
           for (const item of tocFlat) {
+
+            const level = item.level ?? 0;
+
             const chapter: Chapter = {
               id: uuidv4(),
               title: item.title || `Chapter ${orderCounter + 1}`,
@@ -57,17 +60,21 @@ export class EpubService {
               children: []
             };
 
-            while (stack.length && item.level <= stack[stack.length - 1].level) {
+            while (stack.length && level <= stack[stack.length - 1].level) {
               stack.pop();
             }
 
-            if (stack.length) {
-              stack[stack.length - 1].chapter.children.push(chapter);
+            const parent = stack[stack.length - 1];
+            if (parent) {
+              if (!parent.chapter.children) parent.chapter.children = [];
+              parent.chapter.children.push(chapter);
+
             } else {
               chapters.push(chapter);
             }
 
-            stack.push({ level: item.level ?? 0, chapter });
+            stack.push({ level, chapter });
+
           }
 
           // Extract images
