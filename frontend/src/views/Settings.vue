@@ -56,11 +56,23 @@
         <!-- Model Name -->
         <div>
           <label class="label">Model Name</label>
-          <select v-model="formData.modelName" class="input" required>
-            <option v-for="m in models" :key="m.alias" :value="m.alias">
-              {{ m.name }} ({{ m.hostedBy }})
-            </option>
-          </select>
+
+          <input
+            v-model="formData.modelName"
+            type="text"
+            class="input"
+            :list="models.length > 0 ? 'model-list' : undefined"
+            required
+          />
+          <datalist v-if="models.length > 0" id="model-list">
+            <option
+              v-for="m in models"
+              :key="m.alias"
+              :value="m.alias"
+              :label="`${m.name} (${m.hostedBy})`"
+            />
+          </datalist>
+
         </div>
 
         <!-- Default Ratio -->
