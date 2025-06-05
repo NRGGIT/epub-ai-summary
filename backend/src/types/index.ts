@@ -44,6 +44,8 @@ export interface SummarizationConfig {
   modelName: string;
   prompt: string;
   defaultRatio: number;
+  /** Number of retry attempts for AI requests */
+  maxRetries: number;
 }
 
 export interface SummarizeRequest {

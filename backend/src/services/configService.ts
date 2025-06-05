@@ -13,7 +13,8 @@ export class ConfigService {
       apiKey: '',
       modelName: 'gpt-4o-mini',
       prompt: 'You are a helpful assistant that creates concise, accurate summaries of text content. Maintain the key information and main ideas while reducing the length according to the specified ratio. Keep the summary coherent and well-structured.',
-      defaultRatio: 0.3
+      defaultRatio: 0.3,
+      maxRetries: 3
     };
   }
 
@@ -49,7 +50,13 @@ export class ConfigService {
         config.defaultRatio = ratio;
       }
     }
-    
+    if (process.env.OPENAI_MAX_RETRIES) {
+      const retries = parseInt(process.env.OPENAI_MAX_RETRIES, 10);
+      if (!isNaN(retries) && retries >= 0) {
+        config.maxRetries = retries;
+      }
+    }
+
     return config;
   }
 
