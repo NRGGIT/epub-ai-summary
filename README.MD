@@ -9,9 +9,9 @@ The EPUB Reader with AI Summarization is a full-stack web application that allow
 - **Book Library Management**: View, organize, and delete uploaded books from the UI
 - **Chapter Navigation**: Browse book structure with table of contents
 - **On-Demand Content Loading**: Extract chapter content only when requested
-- **AI Summarization**: Generate configurable summaries using OpenAI API with language selection
+- **AI Summarization**: Generate configurable summaries using an external AI API with language selection
 - **Markdown Rendering**: AI summaries rendered with full markdown support (headers, lists, emphasis)
-- **Multi-Language Support**: Generate summaries in English or Russian
+- **Multi-Language Support**: Generate summaries in any supported language
 - **Reading Modes**: Switch between full text and AI summary views
 - **Error Handling**: Comprehensive error display and user feedback
 - **Configuration Management**: Adjustable AI settings and parameters
@@ -35,7 +35,7 @@ The EPUB Reader with AI Summarization is a full-stack web application that allow
                                                 │
                                                 ▼
                                        ┌─────────────────┐
-                                       │   OpenAI API    │
+                                       │    AI  API     │
                                        │ (Summarization) │
                                        └─────────────────┘
 ```
@@ -49,7 +49,7 @@ The EPUB Reader with AI Summarization is a full-stack web application that allow
 - **Framework**: Express.js
 - **EPUB Processing**: epub2 library
 - **File Handling**: fs-extra, multer
-- **AI Integration**: OpenAI API
+- **AI Integration**: Constructor KM API (OpenAI-compatible)
 - **Development**: ts-node-dev for hot reload
 
 ### **Project Structure**
@@ -60,13 +60,14 @@ backend/
 │   ├── types/index.ts        # TypeScript type definitions
 │   ├── services/
 │   │   ├── epubService.ts    # EPUB parsing and content extraction
-│   │   ├── aiService.ts      # OpenAI API integration
+│   │   ├── aiService.ts      # AI API integration
 │   │   └── configService.ts  # Configuration management
 │   └── routes/
 │       ├── upload.ts         # File upload endpoints
 │       ├── books.ts          # Book and chapter endpoints
 │       ├── config.ts         # Configuration endpoints
-│       └── summarize.ts      # AI summarization endpoints
+│       ├── summarize.ts      # AI summarization endpoints
+│       └── models.ts         # List available AI models
 ├── uploads/                  # Uploaded EPUB files storage
 └── package.json
 ```
@@ -87,12 +88,13 @@ backend/
   - Handles errors gracefully with descriptive messages
 
 #### **AIService** (`services/aiService.ts`)
-- **Purpose**: OpenAI API integration for text summarization
+- **Purpose**: Constructor KM API integration for text summarization
 - **Key Methods**:
   - `summarizeContent()`: Generate summaries with configurable compression ratios and language selection
+  - `listModels()`: Retrieve available models from the API
   - Token counting and ratio calculation
   - Language instruction appending to prompts
-- **Configuration**: Supports different OpenAI models and parameters
+- **Configuration**: Supports different AI models and parameters
 - **Ratio Management**: 
   - Estimates tokens using 4 characters ≈ 1 token approximation
   - Instructs AI to target specific token count based on ratio
@@ -129,10 +131,13 @@ backend/
 - `GET /api/config` - Get current configuration
 - `PUT /api/config` - Update configuration
 
+#### **Models Routes** (`/api/models`)
+- `GET /api/models` - List available AI models
+
 ### **Data Flow**
 1. **Upload**: EPUB file → multer → EpubService.parseEpub() → File system storage
 2. **Chapter Loading**: Request → EpubService.getChapterById() → epub2 library → Content extraction
-3. **Summarization**: Content → AIService.summarizeText() → OpenAI API → Summary response
+3. **Summarization**: Content → AIService.summarizeText() → AI API → Summary response
 
 ---
 
@@ -184,7 +189,7 @@ frontend/
   - **Sidebar**: Table of contents with chapter navigation
   - **Reading Modes**: Toggle between full text and AI summary
   - **Summary Controls**: Configurable compression ratio slider and language selection
-  - **Language Selection**: Choose between English and Russian for AI summaries
+  - **Language Selection**: Choose output language for AI summaries
   - **Markdown Rendering**: AI summaries displayed with proper formatting (headers, lists, emphasis)
   - **Manual Generation**: Users can adjust settings before generating summaries
   - **Error Display**: User-friendly error messages
@@ -231,7 +236,7 @@ frontend/
 3. **Reading**: User selects any book from library → Navigate to reader → Select chapter → Content loads on-demand
 4. **Summarization**: 
    - User switches to summary mode → Summary controls appear
-   - User adjusts compression ratio (0.1-0.8) and selects language (English/Russian)
+   - User adjusts compression ratio (0.1-0.8) and selects a language
    - User clicks "Generate" → AI creates summary with markdown formatting
    - Summary displayed with statistics and proper markdown rendering
 
@@ -291,7 +296,7 @@ interface BookListItem {
 
 ### **Prerequisites**
 - Node.js 18+
-- OpenAI API key
+- Access to the Constructor KM API
 
 ### **Installation**
 ```bash
@@ -312,8 +317,13 @@ npm run dev  # Runs on port 3000
 ### **Environment Configuration**
 ```bash
 # backend/.env
-OPENAI_API_KEY=your_openai_api_key
 PORT=3001
+BASE_URL=https://training.constructor.app/api/platform-kmapi
+KNOWLEDGE_MODEL_ID=your_km_id
+API_KEY=your_api_key
+MODEL_NAME=gpt-4.1-nano
+PROMPT="Your summarization prompt"
+DEFAULT_RATIO=0.3
 ```
 
 ---
@@ -386,7 +396,7 @@ epub-read/
 1. **Custom Prompts**: User-defined summarization styles
 2. **Question Answering**: Chat with book content
 3. **Character Analysis**: AI-generated character summaries
-4. **Extended Language Support**: Add more languages beyond English and Russian
+4. **Advanced Language Support**: Improve multilingual handling and translation options
 5. **Audio Summaries**: Text-to-speech integration
 6. **Advanced Markdown**: Support for tables, code blocks, and complex formatting in summaries
 
