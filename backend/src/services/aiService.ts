@@ -13,6 +13,10 @@ export class AIService {
     });
   }
 
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async summarizeContent(request: SummarizeRequest): Promise<SummarizeResponse> {
     const { content, images = [], ratio, customPrompt, language } = request;
     
@@ -28,8 +32,7 @@ export class AIService {
       systemMessage += ` Provide requested summary in ${language} language.`;
     }
 
-    try {
-      const messages: any[] = [
+    const messages: any[] = [
         {
           role: 'system',
           content: systemMessage
@@ -55,28 +58,38 @@ export class AIService {
           ]
         });
       }
+    let lastError: unknown;
+    const retries = this.config.maxRetries ?? 0;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const response = await this.openai.chat.completions.create({
+          model: this.config.modelName,
+          messages,
+          max_tokens: Math.max(targetTokens * 2, 100), // Allow some flexibility
+          temperature: 0.7
+        });
 
-      const response = await this.openai.chat.completions.create({
-        model: this.config.modelName,
-        messages,
-        max_tokens: Math.max(targetTokens * 2, 100), // Allow some flexibility
-        temperature: 0.7
-      });
+        const summary = response.choices[0]?.message?.content || '';
+        const summaryTokens = Math.ceil(summary.length / 4);
+        const actualRatio = summaryTokens / originalTokens;
 
-      const summary = response.choices[0]?.message?.content || '';
-      const summaryTokens = Math.ceil(summary.length / 4);
-      const actualRatio = summaryTokens / originalTokens;
-
-      return {
-        summary,
-        originalTokens,
-        summaryTokens,
-        actualRatio
-      };
-    } catch (error) {
-      console.error('AI summarization error:', error);
-      throw new Error('Failed to generate summary');
+        return {
+          summary,
+          originalTokens,
+          summaryTokens,
+          actualRatio
+        };
+      } catch (error) {
+        lastError = error;
+        console.warn(`Summarization attempt ${attempt + 1} failed:`, error instanceof Error ? error.message : error);
+        if (attempt < retries) {
+          const delayMs = 500 * (attempt + 1);
+          await this.delay(delayMs);
+        }
+      }
     }
+    console.error('AI summarization error:', lastError);
+    throw new Error('Failed to generate summary');
   }
 
   updateConfig(config: SummarizationConfig): void {
