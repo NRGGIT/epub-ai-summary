@@ -16,21 +16,13 @@
       <div class="flex-1 overflow-y-auto p-4">
         <h2 class="text-sm font-medium text-gray-900 mb-3">Table of Contents</h2>
         <div class="space-y-1">
-          <button
-            v-for="chapter in currentBook?.chapters || []"
-            :key="chapter.id"
-            @click="selectChapter(chapter)"
-            class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
-            :class="{
-              'bg-primary-100 text-primary-900': selectedChapter?.id === chapter.id,
-              'text-gray-700 hover:bg-gray-100': selectedChapter?.id !== chapter.id
-            }"
-          >
-            <div class="font-medium truncate">{{ chapter.title }}</div>
-            <div class="text-xs text-gray-500 mt-1">
-              {{ Math.ceil(chapter.content.length / 4) }} tokens
-            </div>
-          </button>
+          <TocItem
+            v-for="ch in currentBook?.chapters || []"
+            :key="ch.id"
+            :chapter="ch"
+            :selectedId="selectedChapter?.id || null"
+            @select="selectChapter"
+          />
         </div>
       </div>
     </div>
@@ -212,12 +204,13 @@ import { useRoute } from 'vue-router';
 import { useAppStore } from '@/stores/app';
 import { storeToRefs } from 'pinia';
 import { marked } from 'marked';
+import TocItem from '@/components/TocItem.vue';
 import type { Chapter, SummarizeResponse, ReadingMode } from '@/types';
 
 const route = useRoute();
 const store = useAppStore();
 const { currentBook } = storeToRefs(store);
-const { loadBook, summarizeContent } = store;
+const { loadBook, loadChapter, loadFullChapter, summarizeContent } = store;
 
 const selectedChapter = ref<Chapter | null>(null);
 const readingMode = ref<ReadingMode>('full');
@@ -238,11 +231,14 @@ const selectChapter = async (chapter: Chapter) => {
   try {
     selectedChapter.value = chapter;
     currentSummary.value = null;
-    
+
     // Load chapter content if not already loaded
     if (!chapter.content || chapter.content.trim() === '') {
-      await store.loadChapter(bookId, chapter.id);
-      // Update the chapter with loaded content
+      if (chapter.children && chapter.children.length) {
+        await loadFullChapter(bookId, chapter.id);
+      } else {
+        await loadChapter(bookId, chapter.id);
+      }
       if (store.currentChapter) {
         chapter.content = store.currentChapter.content;
       }
