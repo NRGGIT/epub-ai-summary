@@ -44,6 +44,12 @@ export const apiService = {
     return response.data;
   },
 
+  // Get nested book structure (hierarchical TOC)
+  async getNestedStructure(bookId: string): Promise<EpubStructure> {
+    const response = await api.get<EpubStructure>(`/books/${bookId}/structure-nested`);
+    return response.data;
+  },
+
   // Update book structure
   async updateBookStructure(bookId: string, structure: EpubStructure): Promise<void> {
     await api.put(`/books/${bookId}/structure`, structure);
@@ -52,6 +58,12 @@ export const apiService = {
   // Get chapter content
   async getChapterContent(bookId: string, chapterId: string): Promise<Chapter> {
     const response = await api.get<Chapter>(`/books/${bookId}/content/${chapterId}`);
+    return response.data;
+  },
+
+  // Get chapter content combined with its subchapters
+  async getFullChapterContent(bookId: string, chapterId: string): Promise<Chapter> {
+    const response = await api.get<Chapter>(`/books/${bookId}/full-content/${chapterId}`);
     return response.data;
   },
 
