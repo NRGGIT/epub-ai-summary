@@ -62,7 +62,7 @@ export const useAppStore = defineStore('app', () => {
       setLoading(true);
       clearError();
       
-      const structure = await apiService.getBookStructure(bookId);
+      const structure = await apiService.getNestedStructure(bookId);
       currentBook.value = structure;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load book';
@@ -93,8 +93,24 @@ export const useAppStore = defineStore('app', () => {
     try {
       setLoading(true);
       clearError();
-      
+
       const chapter = await apiService.getChapterContent(bookId, chapterId);
+      currentChapter.value = chapter;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load chapter';
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFullChapter = async (bookId: string, chapterId: string) => {
+    try {
+      setLoading(true);
+      clearError();
+
+      const chapter = await apiService.getFullChapterContent(bookId, chapterId);
       currentChapter.value = chapter;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load chapter';
@@ -234,6 +250,7 @@ export const useAppStore = defineStore('app', () => {
     loadBook,
     updateBookStructure,
     loadChapter,
+    loadFullChapter,
     startReadingSession,
     endReadingSession,
     loadConfig,

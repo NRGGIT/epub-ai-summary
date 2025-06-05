@@ -111,11 +111,13 @@ backend/
   - Returns book structure with metadata and chapter list
 
 #### **Books Routes** (`/api/books`)
-- `GET /api/books` - Get list of all uploaded books with metadata
-- `GET /api/books/:bookId/structure` - Get book metadata and chapter list
-- `GET /api/books/:bookId/content/:chapterId` - Get specific chapter content
-- `PUT /api/books/:bookId/structure` - Update book structure
-- `DELETE /api/books/:bookId` - Delete a book and all associated files
+- `GET /api/books` - List uploaded books with basic metadata
+- `GET /api/books/:bookId/structure` - Flat chapter list (original endpoint)
+- `GET /api/books/:bookId/structure-nested` - Hierarchical table of contents with nested sections
+- `GET /api/books/:bookId/content/:chapterId` - Retrieve a single chapter
+- `GET /api/books/:bookId/full-content/:chapterId` - Retrieve a chapter combined with all of its subchapters
+- `PUT /api/books/:bookId/structure` - Update stored structure information
+- `DELETE /api/books/:bookId` - Remove a book and all associated assets
 
 #### **Summarization Routes** (`/api/summarize`)
 - `POST /api/summarize` - Generate AI summary
@@ -293,6 +295,9 @@ interface BookListItem {
 
 ### **Installation**
 ```bash
+# Install all dependencies with one command
+npm run install:all
+
 # Backend
 cd backend
 npm install

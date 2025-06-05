@@ -13,6 +13,11 @@ export interface Chapter {
   content: string;
   order: number;
   href: string;
+  /**
+   * ID of the chapter in the EPUB manifest. Used internally when
+   * extracting content. Optional for backward compatibility.
+   */
+  manifestId?: string;
   children?: Chapter[];
 }
 
