@@ -11,19 +11,31 @@
       <h2 class="text-xl font-semibold text-gray-900 mb-6">AI Configuration</h2>
       
       <form @submit.prevent="saveSettings" class="space-y-6">
-        <!-- API Endpoint -->
+        <!-- Base URL -->
         <div>
-          <label class="label">API Endpoint</label>
+          <label class="label">Base URL</label>
           <input
-            v-model="formData.apiEndpoint"
+            v-model="formData.baseUrl"
             type="url"
             class="input"
-            placeholder="https://api.example.com/v1"
+            placeholder="https://training.constructor.app/api/platform-kmapi"
             required
           />
           <p class="text-sm text-gray-500 mt-1">
-            The OpenAI-compatible API endpoint for summarization
+            Base URL of the Constructor KM API
           </p>
+        </div>
+
+        <!-- Knowledge Model ID -->
+        <div>
+          <label class="label">Knowledge Model ID</label>
+          <input
+            v-model="formData.knowledgeModelId"
+            type="text"
+            class="input"
+            placeholder="xxxxxxxx"
+            required
+          />
         </div>
 
         <!-- API Key -->
@@ -48,12 +60,17 @@
             v-model="formData.modelName"
             type="text"
             class="input"
-            placeholder="gpt-4"
+            :list="models.length > 0 ? 'model-list' : undefined"
             required
           />
-          <p class="text-sm text-gray-500 mt-1">
-            The model to use for summarization
-          </p>
+          <datalist v-if="models.length > 0" id="model-list">
+            <option
+              v-for="m in models"
+              :key="m.alias"
+              :value="m.alias"
+              :label="`${m.name} (${m.hostedBy})`"
+            />
+          </datalist>
         </div>
 
         <!-- Default Ratio -->
@@ -180,8 +197,12 @@
       <h3 class="text-lg font-medium text-gray-900 mb-4">Current Configuration</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div>
-          <span class="font-medium text-gray-700">Endpoint:</span>
-          <span class="text-gray-600 ml-2">{{ config.apiEndpoint }}</span>
+          <span class="font-medium text-gray-700">Base URL:</span>
+          <span class="text-gray-600 ml-2">{{ config.baseUrl }}</span>
+        </div>
+        <div>
+          <span class="font-medium text-gray-700">Knowledge Model:</span>
+          <span class="text-gray-600 ml-2">{{ config.knowledgeModelId }}</span>
         </div>
         <div>
           <span class="font-medium text-gray-700">Model:</span>
@@ -204,7 +225,8 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { storeToRefs } from 'pinia';
-import type { SummarizationConfig } from '@/types';
+import type { SummarizationConfig, ModelInfo } from '@/types';
+import { apiService } from '@/services/api';
 
 const store = useAppStore();
 const { config } = storeToRefs(store);
@@ -213,9 +235,11 @@ const { loadConfig, updateConfig } = store;
 const isSaving = ref(false);
 const isTesting = ref(false);
 const testResult = ref<{ success: boolean; message: string } | null>(null);
+const models = ref<ModelInfo[]>([]);
 
 const formData = reactive<SummarizationConfig>({
-  apiEndpoint: '',
+  baseUrl: '',
+  knowledgeModelId: '',
   apiKey: '',
   modelName: '',
   prompt: '',
@@ -223,9 +247,10 @@ const formData = reactive<SummarizationConfig>({
 });
 
 const defaultConfig: SummarizationConfig = {
-  apiEndpoint: 'https://17aa5245425e480e805ff5c79c44fa18.constructor.pro/a023f5c813e74089ab9c5b3fc3c63f80',
-  apiKey: 'qBqkWcSdYGFohFDwNDmL7plk7chQwcwPSWFzi5V6AKFEkRniD9SbSqw2YqV3qyjA',
-  modelName: 'gpt-4.1',
+  baseUrl: 'https://training.constructor.app/api/platform-kmapi',
+  knowledgeModelId: '',
+  apiKey: '',
+  modelName: 'gpt-4.1-nano',
   prompt: 'You are a helpful assistant that creates concise, accurate summaries of text content. Maintain the key information and main ideas while reducing the length according to the specified ratio. Keep the summary coherent and well-structured.',
   defaultRatio: 0.3
 };
@@ -234,6 +259,11 @@ onMounted(async () => {
   await loadConfig();
   if (config.value) {
     Object.assign(formData, config.value);
+  }
+  try {
+    models.value = await apiService.getModels();
+  } catch (err) {
+    console.error('Failed to load models', err);
   }
 });
 
