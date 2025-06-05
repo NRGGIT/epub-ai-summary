@@ -21,6 +21,23 @@ router.get('/:bookId/structure', async (req, res) => {
     console.error('Error getting book structure:', error);
     res.status(500).json({ error: 'Failed to get book structure' });
   }
+  });
+
+// Get nested table of contents (alternative endpoint)
+router.get('/:bookId/structure-nested', async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const structure = await epubService.getBookStructure(bookId);
+
+    if (!structure) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
+    res.json(structure);
+  } catch (error) {
+    console.error('Error getting book structure:', error);
+    res.status(500).json({ error: 'Failed to get book structure' });
+  }
 });
 
 // Update book structure
@@ -50,6 +67,24 @@ router.get('/:bookId/content/:chapterId', async (req, res) => {
     res.json(chapter);
   } catch (error) {
     console.error('Error getting chapter content:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to get chapter content';
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
+// Get chapter content with subchapters combined
+router.get('/:bookId/full-content/:chapterId', async (req, res) => {
+  try {
+    const { bookId, chapterId } = req.params;
+    const chapter = await epubService.getFullChapter(bookId, chapterId);
+
+    if (!chapter) {
+      return res.status(404).json({ error: 'Chapter not found' });
+    }
+
+    res.json(chapter);
+  } catch (error) {
+    console.error('Error getting full chapter content:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to get chapter content';
     res.status(500).json({ error: errorMessage });
   }

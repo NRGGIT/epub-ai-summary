@@ -39,25 +39,32 @@ export class EpubService {
             description: epub.metadata.description
           };
 
-          // Extract chapters
+          // Extract chapters (support nested TOC)
           const chapters: Chapter[] = [];
-          const toc = epub.toc || [];
-          
-          for (let i = 0; i < toc.length; i++) {
-            const tocItem = toc[i];
-            const chapterTitle = tocItem.title || `Chapter ${i + 1}`;
-            
-            const chapter: Chapter = {
-              id: uuidv4(),
-              title: chapterTitle,
-              content: '', // Will be extracted on-demand
-              order: i,
-              href: tocItem.href || '',
-              children: []
-            };
+          const tocTree = (epub as any).ncx && Array.isArray((epub as any).ncx)
+            ? (epub as any).ncx
+            : epub.toc || [];
 
-            chapters.push(chapter);
-          }
+          let orderCounter = 0;
+          const buildChapters = (items: any[]): Chapter[] => {
+            return items.map(item => {
+              const chapter: Chapter = {
+                id: uuidv4(),
+                title: item.title || `Chapter ${orderCounter + 1}`,
+                content: '', // Extract on demand
+                order: orderCounter++,
+                href: item.href || '',
+                children: []
+              };
+
+              if (item.sub && Array.isArray(item.sub) && item.sub.length > 0) {
+                chapter.children = buildChapters(item.sub);
+              }
+              return chapter;
+            });
+          };
+
+          chapters.push(...buildChapters(tocTree));
 
           // Extract images
           const images: ImageAsset[] = [];
@@ -166,6 +173,28 @@ export class EpubService {
     return extensions[mediaType] || 'jpg';
   }
 
+  private findChapterById(chapters: Chapter[], id: string): Chapter | null {
+    for (const ch of chapters) {
+      if (ch.id === id) return ch;
+      if (ch.children && ch.children.length) {
+        const found = this.findChapterById(ch.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  private collectChapterContent(chapter: Chapter): string {
+    let text = chapter.content || '';
+    if (chapter.children && chapter.children.length) {
+      for (const child of chapter.children) {
+        text += '\n' + this.collectChapterContent(child);
+      }
+    }
+    return text.trim();
+  }
+
+
   async getBookStructure(bookId: string): Promise<EpubStructure | null> {
     try {
       const structurePath = path.join(this.uploadsDir, bookId, 'structure.json');
@@ -185,7 +214,7 @@ export class EpubService {
     const structure = await this.getBookStructure(bookId);
     if (!structure) return null;
 
-    const chapter = structure.chapters.find(chapter => chapter.id === chapterId);
+    const chapter = this.findChapterById(structure.chapters, chapterId);
     if (!chapter) return null;
 
     // Extract actual content if not already present
@@ -228,5 +257,54 @@ export class EpubService {
     }
 
     return chapter;
+  }
+
+  async getFullChapter(bookId: string, chapterId: string): Promise<Chapter | null> {
+    const structure = await this.getBookStructure(bookId);
+    if (!structure) return null;
+
+    const target = this.findChapterById(structure.chapters, chapterId);
+    if (!target) return null;
+
+    const epubPath = path.join(this.uploadsDir, bookId, 'book.epub');
+    if (!(await fs.pathExists(epubPath))) {
+      throw new Error('EPUB file not found');
+    }
+
+    const epub = await new Promise<EPub>((resolve, reject) => {
+      const e = new EPub(epubPath);
+      e.on('error', reject);
+      e.on('end', () => resolve(e));
+      e.parse();
+    });
+
+    const loadContent = async (ch: Chapter) => {
+      if (!ch.content || ch.content.trim() === '') {
+        let manifestId: string | null = null;
+        for (const [id, item] of Object.entries(epub.manifest || {})) {
+          if (item.href === ch.href) {
+            manifestId = id;
+            break;
+          }
+        }
+
+        if (!manifestId) {
+          throw new Error(`No manifest entry found for ${ch.href}`);
+        }
+
+        ch.content = await this.getChapterContent(epub, manifestId);
+      }
+
+      if (ch.children && ch.children.length) {
+        for (const child of ch.children) {
+          await loadContent(child);
+        }
+      }
+    };
+
+    await loadContent(target);
+    await this.updateBookStructure(bookId, structure);
+
+    return { ...target, content: this.collectChapterContent(target) };
   }
 }
