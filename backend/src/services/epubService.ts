@@ -41,31 +41,37 @@ export class EpubService {
 
           // Extract chapters (support nested TOC)
           const chapters: Chapter[] = [];
-          const tocTree = (epub as any).ncx && Array.isArray((epub as any).ncx)
-            ? (epub as any).ncx
-            : epub.toc || [];
+          const tocFlat = epub.toc || [];
 
           let orderCounter = 0;
-          const buildChapters = (items: any[]): Chapter[] => {
-            return items.map(item => {
-              const chapter: Chapter = {
-                id: uuidv4(),
-                title: item.title || `Chapter ${orderCounter + 1}`,
-                content: '', // Extract on demand
-                order: orderCounter++,
-                href: item.href || '',
-                manifestId: item.id || undefined,
-                children: []
-              };
+          const stack: Array<{ level: number; chapter: Chapter }> = [];
 
-              if (item.sub && Array.isArray(item.sub) && item.sub.length > 0) {
-                chapter.children = buildChapters(item.sub);
-              }
-              return chapter;
-            });
-          };
+          for (const item of tocFlat) {
+            const level = item.level ?? 0;
+            const chapter: Chapter = {
+              id: uuidv4(),
+              title: item.title || `Chapter ${orderCounter + 1}`,
+              content: '',
+              order: orderCounter++,
+              href: item.href || '',
+              manifestId: item.id || undefined,
+              children: []
+            };
 
-          chapters.push(...buildChapters(tocTree));
+            while (stack.length && level <= stack[stack.length - 1].level) {
+              stack.pop();
+            }
+
+            const parent = stack[stack.length - 1];
+            if (parent) {
+              if (!parent.chapter.children) parent.chapter.children = [];
+              parent.chapter.children.push(chapter);
+            } else {
+              chapters.push(chapter);
+            }
+
+            stack.push({ level, chapter });
+          }
 
           // Extract images
           const images: ImageAsset[] = [];
@@ -74,7 +80,7 @@ export class EpubService {
           for (const [id, item] of Object.entries(manifest)) {
             if (item['media-type']?.startsWith('image/')) {
               try {
-                const imageBuffer = await this.getImageBuffer(epub, item.href || '');
+                const imageBuffer = await this.getImageBuffer(epub, id);
                 const imagePath = path.join(bookDir, `${id}.${this.getImageExtension(item['media-type'] || 'image/jpeg')}`);
                 
                 await fs.writeFile(imagePath, imageBuffer);
@@ -136,9 +142,9 @@ export class EpubService {
     });
   }
 
-  private async getImageBuffer(epub: any, href: string): Promise<Buffer> {
+  private async getImageBuffer(epub: any, id: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      epub.getImage(href, (error: Error, data: Buffer) => {
+      epub.getImage(id, (error: Error, data: Buffer) => {
         if (error) {
           reject(error);
         } else {
