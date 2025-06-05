@@ -6,6 +6,7 @@ import { uploadRouter } from './routes/upload';
 import { booksRouter } from './routes/books';
 import { configRouter } from './routes/config';
 import { summarizeRouter } from './routes/summarize';
+import { modelsRouter } from './routes/models';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +30,7 @@ app.use('/api/upload', uploadRouter);
 app.use('/api/books', booksRouter);
 app.use('/api/config', configRouter);
 app.use('/api/summarize', summarizeRouter);
+app.use('/api/models', modelsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
