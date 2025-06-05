@@ -39,13 +39,24 @@ export interface EpubMetadata {
 }
 
 export interface SummarizationConfig {
-  apiEndpoint: string;
+  /** Base URL of the Constructor KM API */
+  baseUrl: string;
+  /** Knowledge model identifier */
+  knowledgeModelId: string;
+  /** API key used for authentication */
   apiKey: string;
+  /** Selected language model name */
   modelName: string;
+  /** Default system prompt for summarisation */
   prompt: string;
+  /** Default summary ratio */
   defaultRatio: number;
-  /** Number of retry attempts for AI requests */
-  maxRetries: number;
+}
+
+export interface ModelInfo {
+  name: string;
+  alias: string;
+  hostedBy: string;
 }
 
 export interface SummarizeRequest {

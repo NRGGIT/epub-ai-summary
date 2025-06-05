@@ -39,11 +39,18 @@ export interface EpubMetadata {
 }
 
 export interface SummarizationConfig {
-  apiEndpoint: string;
+  baseUrl: string;
+  knowledgeModelId: string;
   apiKey: string;
   modelName: string;
   prompt: string;
   defaultRatio: number;
+}
+
+export interface ModelInfo {
+  name: string;
+  alias: string;
+  hostedBy: string;
 }
 
 export interface SummarizeRequest {

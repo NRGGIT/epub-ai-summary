@@ -6,7 +6,8 @@ import type {
   SummarizeRequest,
   SummarizeResponse,
   UploadResponse,
-  BookListItem
+  BookListItem,
+  ModelInfo
 } from '@/types';
 
 // Get backend URL from environment variable or default to relative path
@@ -70,6 +71,11 @@ export const apiService = {
   // Summarize content
   async summarizeContent(request: SummarizeRequest): Promise<SummarizeResponse> {
     const response = await api.post<SummarizeResponse>('/summarize', request);
+    return response.data;
+  },
+
+  async getModels(): Promise<ModelInfo[]> {
+    const response = await api.get<ModelInfo[]>('/models');
     return response.data;
   },
 

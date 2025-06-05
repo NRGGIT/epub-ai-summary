@@ -9,12 +9,13 @@ export class ConfigService {
   constructor() {
     this.configPath = path.join(__dirname, '../../data/config.json');
     this.defaultConfig = {
-      apiEndpoint: 'https://api.openai.com/v1',
+      baseUrl: 'https://training.constructor.app/api/platform-kmapi',
+      knowledgeModelId: '',
       apiKey: '',
-      modelName: 'gpt-4o-mini',
-      prompt: 'You are a helpful assistant that creates concise, accurate summaries of text content. Maintain the key information and main ideas while reducing the length according to the specified ratio. Keep the summary coherent and well-structured.',
-      defaultRatio: 0.3,
-      maxRetries: 3
+      modelName: 'gpt-4.1-nano',
+      prompt:
+        'You are a helpful assistant that creates concise, accurate summaries of text content. Maintain the key information and main ideas while reducing the length according to the specified ratio. Keep the summary coherent and well-structured.',
+      defaultRatio: 0.3
     };
   }
 
@@ -32,28 +33,25 @@ export class ConfigService {
     }
     
     // Override with environment variables if available (env vars have highest priority)
-    if (process.env.OPENAI_API_ENDPOINT) {
-      config.apiEndpoint = process.env.OPENAI_API_ENDPOINT;
+    if (process.env.BASE_URL) {
+      config.baseUrl = process.env.BASE_URL;
     }
-    if (process.env.OPENAI_API_KEY) {
-      config.apiKey = process.env.OPENAI_API_KEY;
+    if (process.env.KNOWLEDGE_MODEL_ID) {
+      config.knowledgeModelId = process.env.KNOWLEDGE_MODEL_ID;
     }
-    if (process.env.OPENAI_MODEL_NAME) {
-      config.modelName = process.env.OPENAI_MODEL_NAME;
+    if (process.env.API_KEY) {
+      config.apiKey = process.env.API_KEY;
     }
-    if (process.env.OPENAI_PROMPT) {
-      config.prompt = process.env.OPENAI_PROMPT;
+    if (process.env.MODEL_NAME) {
+      config.modelName = process.env.MODEL_NAME;
+    }
+    if (process.env.PROMPT) {
+      config.prompt = process.env.PROMPT;
     }
     if (process.env.DEFAULT_RATIO) {
       const ratio = parseFloat(process.env.DEFAULT_RATIO);
       if (!isNaN(ratio) && ratio > 0 && ratio <= 1) {
         config.defaultRatio = ratio;
-      }
-    }
-    if (process.env.OPENAI_MAX_RETRIES) {
-      const retries = parseInt(process.env.OPENAI_MAX_RETRIES, 10);
-      if (!isNaN(retries) && retries >= 0) {
-        config.maxRetries = retries;
       }
     }
 
