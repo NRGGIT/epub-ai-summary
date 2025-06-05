@@ -94,7 +94,7 @@ jspm_packages/
 .tern-port
 
 # EPUB files
-*.epub
+# *.epub
 
 # Uploaded files and temporary directories
 backend/uploads/
