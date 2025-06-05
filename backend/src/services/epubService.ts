@@ -137,7 +137,8 @@ export class EpubService {
           // Clean up HTML and extract text content
           const cleanText = this.cleanHtmlContent(text || '');
           if (!cleanText || cleanText.trim().length === 0) {
-            reject(new Error(`No content found in ${href}`));
+            console.warn(`Empty content for ${href} - possible image-only chapter`);
+            resolve('');
           } else {
             resolve(cleanText);
           }
@@ -159,8 +160,10 @@ export class EpubService {
   }
 
   private cleanHtmlContent(html: string): string {
-    // Remove HTML tags and clean up content
+    // Replace images with a placeholder then remove other HTML tags
     return html
+      .replace(/<img[^>]*alt=["']?([^"'>]*)["']?[^>]*>/gi, (_, alt) => alt ? `[Image: ${alt}]` : '[Image]')
+      .replace(/<img[^>]*>/gi, '[Image]')
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ')
       .replace(/&amp;/g, '&')
