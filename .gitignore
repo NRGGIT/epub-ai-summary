@@ -94,7 +94,7 @@ jspm_packages/
 .tern-port
 
 # EPUB files
-*.epub
+
 
 # Uploaded files and temporary directories
 backend/uploads/
@@ -120,5 +120,5 @@ __pycache__/
 .dockerignore
 
 # Test files
-test-*.epub
-demo-*.txt
+# test-*.epub
+# demo-*.txt
