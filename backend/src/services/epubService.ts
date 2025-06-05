@@ -1,4 +1,4 @@
-import EPub from 'epub2';
+import { EPub } from 'epub2';
 import fs from 'fs-extra';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -54,6 +54,7 @@ export class EpubService {
                 content: '', // Extract on demand
                 order: orderCounter++,
                 href: item.href || '',
+                manifestId: item.id || undefined,
                 children: []
               };
 
@@ -230,20 +231,22 @@ export class EpubService {
             epub.parse();
           });
           
-          // Find the manifest ID that corresponds to this chapter's href
-          // The epub.getChapter() method expects manifest IDs, not file paths
-          let manifestId = null;
-          for (const [id, item] of Object.entries(epub.manifest || {})) {
-            if (item.href === chapter.href) {
-              manifestId = id;
-              break;
+          // Prefer manifestId stored in structure, fallback to search by href
+          let manifestId = chapter.manifestId || null;
+          if (!manifestId) {
+            for (const [id, item] of Object.entries(epub.manifest || {})) {
+              if (item.href === chapter.href) {
+                manifestId = id as string;
+                break;
+              }
             }
           }
-          
+
           if (!manifestId) {
             throw new Error(`No manifest entry found for ${chapter.href}`);
           }
-          
+
+          chapter.manifestId = manifestId;
           chapter.content = await this.getChapterContent(epub, manifestId);
           
           // Update the structure with the extracted content
@@ -280,11 +283,13 @@ export class EpubService {
 
     const loadContent = async (ch: Chapter) => {
       if (!ch.content || ch.content.trim() === '') {
-        let manifestId: string | null = null;
-        for (const [id, item] of Object.entries(epub.manifest || {})) {
-          if (item.href === ch.href) {
-            manifestId = id;
-            break;
+        let manifestId: string | null = ch.manifestId || null;
+        if (!manifestId) {
+          for (const [id, item] of Object.entries(epub.manifest || {})) {
+            if (item.href === ch.href) {
+              manifestId = id as string;
+              break;
+            }
           }
         }
 
@@ -292,6 +297,7 @@ export class EpubService {
           throw new Error(`No manifest entry found for ${ch.href}`);
         }
 
+        ch.manifestId = manifestId;
         ch.content = await this.getChapterContent(epub, manifestId);
       }
 
