@@ -288,6 +288,13 @@ interface BookListItem {
   chapterCount: number;
   uploadDate: Date;
 }
+
+interface ModelInfo {
+  name: string;
+  alias: string;
+  hostedBy: name;
+}
+
 ```
 
 ---
